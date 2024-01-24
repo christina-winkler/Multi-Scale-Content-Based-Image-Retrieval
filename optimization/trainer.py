@@ -71,6 +71,9 @@ def train(args, train_loader, valid_loader, model, device='cpu'):
         model = torch.nn.DataParallel(model)
         args.parallel = True
 
+    label_to_idx = {'airplane':0, 'ship':1, 'bridge':2}
+    idx_to_label = {0: 'airplane', 1:'ship', 2:'bridge'}
+
     for epoch in range(args.epochs):
         for batch_idx, item in enumerate(train_loader):
 
@@ -82,9 +85,10 @@ def train(args, train_loader, valid_loader, model, device='cpu'):
 
             # forward loss
             scores = model.forward(img)
+            probs = torch.nn.functional.softmax(scores)
 
             # compute loss
-            loss = cross_entropy_loss(scores, label)
+            loss = cross_entropy_loss(probs, label)
 
             # Compute gradients
             loss.mean().backward()
@@ -105,53 +109,20 @@ def train(args, train_loader, valid_loader, model, device='cpu'):
 
                 with torch.no_grad():
 
-                    # if hasattr(model, "module"):
-                    #     model_without_dataparallel = model.module
-                    # else:
-                    #     model_without_dataparallel = model
-
                     model.eval()
 
-                    # Visualize low resolution GT
-                    grid_low_res = torchvision.utils.make_grid(x[0:9, :, :, :].cpu(), normalize=True, nrow=3)
-                    plt.figure()
-                    plt.imshow(grid_low_res.permute(1, 2, 0)[:,:,0], cmap=cmap)
-                    plt.axis('off')
-                    plt.title("Low-Res GT (train)")
-                    # plt.show()
-                    plt.savefig(viz_dir + '/low_res_gt{}.png'.format(step), dpi=300, bbox_inches='tight')
-                    plt.close()
+                    # visualize training prediction and predicted label and GT
+                    pred_scores = model(img[0,...].unsqueeze(0))
+                    pred_probs = torch.nn.functional.softmax(pred_scores)
+                    pred_label = torch.argmax(pred_probs).item()
 
-                    # Visualize High-Res GT
-                    grid_high_res_gt = torchvision.utils.make_grid(y[0:9, :, :, :].cpu(), normalize=True, nrow=3)
+                    grid = torchvision.utils.make_grid(img[0:9, :, :, :].cpu(), normalize=True, nrow=3)
                     plt.figure()
-                    plt.imshow(grid_high_res_gt.permute(1, 2, 0)[:,:,0], cmap=cmap)
+                    plt.imshow(grid.permute(1, 2, 0)[:,:,0])
                     plt.axis('off')
-                    plt.title("High-Res GT")
-                    # plt.show()
-                    plt.savefig(viz_dir + '/high_res_gt_{}.png'.format(step), dpi=300, bbox_inches='tight')
-                    plt.close()
-
-                     # Super-Resolving low-res
-                    y_hat, logdet, logpz = model(xlr=x, reverse=True, eps=0.8)
-                    # print(y_hat.max(), y_hat.min(), y.max(), y.min())
-                    grid_y_hat = torchvision.utils.make_grid(y_hat[0:9, :, :, :].cpu(), normalize=False, nrow=3)
-                    plt.figure()
-                    plt.imshow(grid_y_hat.permute(1, 2, 0)[:,:,0], cmap=cmap)
-                    plt.axis('off')
-                    plt.title("Y hat")
-                    plt.savefig(viz_dir + '/y_hat_mu08_{}.png'.format(step), dpi=300,bbox_inches='tight')
-                    # plt.show()
-                    plt.close()
-
-                    abs_err = torch.abs(y_hat - y)
-                    grid_abs_error = torchvision.utils.make_grid(abs_err[0:9,:,:,:].cpu(), normalize=True, nrow=3)
-                    plt.figure()
-                    plt.imshow(grid_abs_error.permute(1, 2, 0)[:,:,0], cmap=cmap)
-                    plt.axis('off')
-                    plt.title("Abs Err")
-                    plt.savefig(viz_dir + '/abs_err_{}.png'.format(step), dpi=300,bbox_inches='tight')
-                    # plt.show()
+                    plt.title("Predicted Label: {} || GT Label: {}".format(idx_to_label[pred_label],idx_to_label[label[0].item()]))
+                    plt.show()
+                    plt.savefig(viz_dir + '/classification_train_{}.png'.format(step), dpi=300, bbox_inches='tight')
                     plt.close()
 
 
@@ -163,10 +134,6 @@ def train(args, train_loader, valid_loader, model, device='cpu'):
                                      args.experiment_dir,
                                      "{}".format(step),
                                      args)
-
-                writer.add_scalar("nll_valid",
-                                  nll_valid.mean().item(),
-                                  logging_step)
 
                 # save checkpoint only when nll lower than previous model
                 if nll_valid < prev_nll_epoch:

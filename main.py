@@ -65,7 +65,7 @@ def main(args):
     height, width = next(iter(train_loader))[0].shape[1], next(iter(train_loader))[0].shape[2]
 
     if args.modeltype == 'densenet161':
-        model = models.densenet161(pretrained=True)
+        model = models.densenet161(weights='DenseNet161_Weights.IMAGENET1K_V1')
         # adapt FC classification layer
         model.classifier = nn.Linear(in_features=2208, out_features=3)
         trainer.train(args, train_loader, valid_loader, model, device='cpu')
