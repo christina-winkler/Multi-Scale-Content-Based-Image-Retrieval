@@ -6,7 +6,7 @@ import PIL
 import os
 import torchvision
 from torchvision import transforms
-from utils import metrics
+
 import sys
 sys.path.append("../../")
 
@@ -14,11 +14,6 @@ from os.path import exists, join
 import matplotlib.pyplot as plt
 import pdb
 
-def inv_scaler(x, args):
-    min_value = 0 if args.trainset == 'era5-TCW' else 315.91873
-    max_value = 100 if args.trainset == 'era5-TCW' else 241.22385
-    x = x * (max_value - min_value) + min_value
-    return x
 
 def validate(model, val_loader, metric_dict, exp_name, logstep, args):
 

@@ -3,6 +3,7 @@ sys.path.append("../../")
 
 import argparse
 import torch
+import torch.nn as nn
 from torchvision import datasets, transforms,models
 
 # Dataset loading
@@ -65,6 +66,8 @@ def main(args):
 
     if args.modeltype == 'densenet161':
         model = models.densenet161(pretrained=True)
+        # adapt FC classification layer
+        model.classifier = nn.Linear(in_features=2208, out_features=3)
         trainer.train(args, train_loader, valid_loader, model, device='cpu')
 
     print("Start training {} on {}:".format(args.modeltype, args.trainset))

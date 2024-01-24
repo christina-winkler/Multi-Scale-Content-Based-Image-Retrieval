@@ -73,4 +73,4 @@ class Resisc45(Dataset):
         # read .jpg image from file
         img = cv2.imread(image)
 
-        return self.transform(img)
+        return self.transform(img), label

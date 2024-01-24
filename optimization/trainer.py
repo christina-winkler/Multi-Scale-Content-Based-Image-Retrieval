@@ -1,5 +1,6 @@
 from datetime import datetime
 import torch
+import torch.nn as nn
 import matplotlib.pyplot as plt
 from matplotlib import cm
 import torch.optim as optim
@@ -30,15 +31,10 @@ np.random.seed(0)
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 
-def train(args, train_loader, valid_loader, model, device='cpu',
-          needs_init=True):
+def train(args, train_loader, valid_loader, model, device='cpu'):
 
-    import pdb; pdb.set_trace()
-    cmap = 'viridis' if args.trainset == 'era5-TCW' else 'inferno'
-
-    # wandb.init(project="arflow", config=config_dict)
     args.experiment_dir = os.path.join('runs',
-                                        args.modeltype + '_' + args.trainset + '_' + datetime.now().strftime("_%Y_%m_%d_%H_%M_%S") +'_'+ str(args.s)+'x')
+                                        args.modeltype + '_' + args.trainset + '_' + datetime.now().strftime("_%Y_%m_%d_%H_%M_%S"))
 
     os.makedirs(args.experiment_dir, exist_ok=True)
     config_dict = vars(args)
@@ -59,18 +55,15 @@ def train(args, train_loader, valid_loader, model, device='cpu',
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer,
                                                 step_size=2 * 10 ** 5,
                                                 gamma=0.5)
-    state=None
-
     model.to(device)
-    scaler = MinMaxScaler()
-    l1 = nn.L1Loss()
+
+    cross_entropy_loss = nn.CrossEntropyLoss()
     metric_dict = {'MSE': [], 'RMSE': [], 'MAE': []}
     params = sum(x.numel() for x in model.parameters() if x.requires_grad)
     print('Nr of Trainable Params on {}:  '.format(device), params)
 
     # add hyperparameters to tensorboardX logger
-    writer.add_hparams({'lr': args.lr, 'bsize':args.bsz, 'Flow Steps':args.K,
-                        'Levels':args.L}, {'nll_train': - np.inf})
+    writer.add_hparams({'lr': args.lr, 'bsize':args.bsz}, {'nll_train': - np.inf})
 
 
     if torch.cuda.device_count() > 1 and args.train:
@@ -81,30 +74,19 @@ def train(args, train_loader, valid_loader, model, device='cpu',
     for epoch in range(args.epochs):
         for batch_idx, item in enumerate(train_loader):
 
-            y = item[0].to(device)
-            x = item[1].to(device)
-            # y_unorm = item[2].to(device)
-            # x_unorm = item[3].to(device)
+            img = item[0].to(device)
+            label = item[1].to(device)
 
             model.train()
             optimizer.zero_grad()
 
-            # # We need to init the underlying module in the dataparallel object
-            # For ActNorm layers.
-            if needs_init and torch.cuda.device_count() > 1:
-                bsz_p_gpu = args.bsz // torch.cuda.device_count()
-                _, _ = model.module.forward(x_hr=y[:bsz_p_gpu],
-                                            xlr=x[:bsz_p_gpu],
-                                            logdet=0)
-
             # forward loss
-            z, nll = model.forward(x_hr=y, xlr=x)
+            scores = model.forward(img)
 
-            writer.add_scalar("nll_train", nll.mean().item(), step)
-            # wandb.log({"nll_train": nll.mean().item()}, step)
+            # compute loss
+            loss = cross_entropy_loss(scores, label)
 
             # Compute gradients
-            loss = nll
             loss.mean().backward()
 
             # Update model parameters using calculated gradients
@@ -112,12 +94,12 @@ def train(args, train_loader, valid_loader, model, device='cpu',
             scheduler.step()
             step = step + 1
 
-            print("[{}] Epoch: {}, Train Step: {:01d}/{}, Bsz = {}, NLL {:.3f}".format(
+            print("[{}] Epoch: {}, Train Step: {:01d}/{}, Bsz = {}, CE Loss {:.3f}".format(
                     datetime.now().strftime("%Y-%m-%d %H:%M"),
                     epoch, step,
                     args.max_steps,
                     args.bsz,
-                    nll.mean().item()))
+                    loss.mean().item()))
 
             if step % args.log_interval == 0:
 
