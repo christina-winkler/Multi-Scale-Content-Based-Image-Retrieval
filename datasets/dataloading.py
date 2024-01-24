@@ -16,7 +16,7 @@ import os
 import xarray as xr
 import subprocess
 
-from datasets import fair1m_dataset
+from datasets import fair1m_dataset, resisc45_dataset
 
 random.seed(0)
 torch.manual_seed(0)
@@ -46,6 +46,16 @@ def load_fair1m(args):
 
 
 def load_resisc45(args):
+
+    train_data = resisc45_dataset.Resisc45(data_path=args.datadir + '/interview_datasets/RESISC45_partial/train')
+    valid_data = resisc45_dataset.Resisc45(data_path=args.datadir + '/interview_datasets/RESISC45_partial/val')
+    test_data = resisc45_dataset.Resisc45(data_path=args.datadir + '/interview_datasets/RESISC45_partial/test')
+
+    train_loader = data_utils.DataLoader(train_data, args.bsz, shuffle=True,
+                                         drop_last=True)
+    val_loader = data_utils.DataLoader(valid_data, args.bsz, shuffle=True, drop_last=True)
+    test_loader = data_utils.DataLoader(test_data, args.bsz, shuffle=False,
+                                        drop_last=False)
 
     return train_loader, val_loader, test_loader, args
 

@@ -57,12 +57,11 @@ def main(args):
         args.modelname = "{}_{}_bsz{}_K{}_L{}_lr{:.4f}_s{}".format(args.modeltype, args.trainset,
                                                                    args.bsz, args.K, args.L,
                                                                    args.lr, args.s)
-
     if args.train:
         # load data
         train_loader, valid_loader, test_loader, args = dataloading.load_data(args)
-        in_channels = next(iter(test_loader))[0].shape[1]
-        height, width = next(iter(train_loader))[0].shape[2], next(iter(train_loader))[0].shape[3]
+        in_channels = next(iter(test_loader))[0].shape[0]
+        height, width = next(iter(train_loader))[0].shape[1], next(iter(train_loader))[0].shape[2]
 
     print("Start training {} on {}:".format(args.modeltype, args.trainset))
 
