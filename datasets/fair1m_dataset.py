@@ -79,6 +79,9 @@ class FAIR1MData(Dataset):
         self.images = sorted(self.images)
         self.labels = sorted(self.labels)
 
+        if self.transform is None:
+            self.transform = transforms.ToTensor()
+
 
     def __len__(self):
         return len(self.images)
@@ -98,15 +101,9 @@ class FAIR1MData(Dataset):
 
         # get image from geotiff
         img = rasterio.open(image)
-        img = img.read(1)
+        img = img.read(3)
+        img = self.transform(img)
 
-        import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
 
-        width = int(label_dict['annotation']['size']['width'])
-        height = int(label_dict['annotation']['size']['height'])
-        extras = {'FilePath':jpg_path, 'Split': split_nm, 'ImageWidth': width, 'ImageHeight': height}
-
-        import pdb; pdb.set_trace()
-
-
-        return None
+        return img

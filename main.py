@@ -132,7 +132,7 @@ if __name__ == "__main__":
 
     # data
     parser.add_argument("--datadir", type=str, default="/home/christina/Documents/CV_ML_Assignment/datasets/")
-    parser.add_argument("--trainset", type=str, default="fair1m",
+    parser.add_argument("--trainset", type=str, default="resisc45",
                         help="Dataset to train the model on [fair1m, resisc45, sentinel2].")
 
 
