@@ -97,6 +97,10 @@ def train(args, train_loader, valid_loader, model, device):
             optimizer.step()
             scheduler.step()
             step = step + 1
+            
+# TODO: store features over training set (output before classifier layer) in dictionary
+# TODO: then cluster them (KDTree ?)
+# TODO: store results in pickle file
 
             print("[{}] Epoch: {}, Train Step: {:01d}/{}, Bsz = {}, CE Loss {:.3f}".format(
                     datetime.now().strftime("%Y-%m-%d %H:%M"),

@@ -24,3 +24,7 @@ def calculate_multiclass_metrics(predictions, targets, average='weighted'):
     accuracy = accuracy_score(targets_np, predictions_np)
 
     return precision, recall, accuracy
+
+
+# TODO: store features over test set (output before classifier layer) in dictionary
+# TODO: then cluster them (KDTree ?)
