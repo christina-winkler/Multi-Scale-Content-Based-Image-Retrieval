@@ -41,8 +41,8 @@ class Resisc45(Dataset):
 
     def __post_init__(self):
 
-        dir = Path(self.data_path)
-        gen_jpg = dir.rglob('*.jpg')
+        pathdir = Path(self.data_path)
+        gen_jpg = pathdir.rglob('*.jpg')
 
         self.images = []
         self.label_to_idx = {'airplane':0, 'ship':1, 'bridge':2}

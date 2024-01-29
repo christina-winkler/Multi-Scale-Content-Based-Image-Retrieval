@@ -31,7 +31,7 @@ np.random.seed(0)
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 
-def train(args, train_loader, valid_loader, model, device='cpu'):
+def train(args, train_loader, valid_loader, model, device):
 
     args.experiment_dir = os.path.join('runs',
                                         args.modeltype + '_' + args.trainset + '_' + datetime.now().strftime("_%Y_%m_%d_%H_%M_%S"))

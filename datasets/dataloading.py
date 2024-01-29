@@ -16,6 +16,7 @@ import os
 import xarray as xr
 import subprocess
 
+
 from datasets import fair1m_dataset, resisc45_dataset
 
 random.seed(0)
@@ -30,6 +31,7 @@ sys.path.append("../")
 
 
 def load_fair1m(args):
+
 
     train_data = fair1m_dataset.FAIR1MData(data_path=args.datadir + '/interview_datasets/FAIR1M_partial/train')
     valid_data = fair1m_dataset.FAIR1MData(data_path=args.datadir + '/interview_datasets/FAIR1M_partial/valid')
@@ -51,11 +53,9 @@ def load_resisc45(args):
     valid_data = resisc45_dataset.Resisc45(data_path=args.datadir + '/interview_datasets/RESISC45_partial/val')
     test_data = resisc45_dataset.Resisc45(data_path=args.datadir + '/interview_datasets/RESISC45_partial/test')
 
-    train_loader = data_utils.DataLoader(train_data, args.bsz, shuffle=True,
-                                         drop_last=True)
+    train_loader = data_utils.DataLoader(train_data, args.bsz, shuffle=True, drop_last=True)
     val_loader = data_utils.DataLoader(valid_data, args.bsz, shuffle=True, drop_last=True)
-    test_loader = data_utils.DataLoader(test_data, args.bsz, shuffle=False,
-                                        drop_last=False)
+    test_loader = data_utils.DataLoader(test_data, args.bsz, shuffle=False, drop_last=False)
 
     return train_loader, val_loader, test_loader, args
 

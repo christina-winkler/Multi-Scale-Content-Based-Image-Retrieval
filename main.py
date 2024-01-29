@@ -64,11 +64,16 @@ def main(args):
     in_channels = next(iter(test_loader))[0].shape[0]
     height, width = next(iter(train_loader))[0].shape[1], next(iter(train_loader))[0].shape[2]
 
-    if args.modeltype == 'densenet161':
-        model = models.densenet161(weights='DenseNet161_Weights.IMAGENET1K_V1')
+    if args.modeltype == 'densenet121':
+        model = models.densenet121(weights='DenseNet121_Weights.IMAGENET1K_V1')
+
         # adapt FC classification layer
         model.classifier = nn.Linear(in_features=2208, out_features=3)
-        trainer.train(args, train_loader, valid_loader, model, device='cpu')
+
+        params = sum(x.numel() for x in model.parameters() if x.requires_grad)
+        print('Nr of Trainable Params on {}:  '.format(args.device), params)
+
+        trainer.train(args, train_loader, valid_loader, model, device=args.device)
 
     print("Start training {} on {}:".format(args.modeltype, args.trainset))
 
@@ -78,7 +83,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     # train configs
-    parser.add_argument("--modeltype", type=str, default="densenet161",
+    parser.add_argument("--modeltype", type=str, default="densenet121",
                         help="Specify modeltype you would like to train.")
     parser.add_argument("--model_path", type=str, default="runs/",
                         help="Directory where models are saved.")
@@ -121,7 +126,7 @@ if __name__ == "__main__":
                         help="# of residual-in-residual blocks in LR network.")
 
     # data
-    parser.add_argument("--datadir", type=str, default="/home/christina/Documents/CV_ML_Assignment/datasets/")
+    parser.add_argument("--datadir", type=str, default="/home/christina/Documents/classification/datasets/")
     parser.add_argument("--trainset", type=str, default="resisc45",
                         help="Dataset to train the model on [fair1m, resisc45, sentinel2].")
 
