@@ -68,7 +68,7 @@ def main(args):
         model = models.densenet121(weights='DenseNet121_Weights.IMAGENET1K_V1')
 
         # adapt FC classification layer
-        model.classifier = nn.Linear(in_features=2208, out_features=3)
+        model.classifier = nn.Linear(in_features=1024, out_features=3)
 
         params = sum(x.numel() for x in model.parameters() if x.requires_grad)
         print('Nr of Trainable Params on {}:  '.format(args.device), params)

@@ -47,7 +47,7 @@ def train(args, train_loader, valid_loader, model, device):
     os.makedirs(viz_dir, exist_ok=True)
 
     writer = SummaryWriter("{}".format(args.experiment_dir))
-    prev_nll_epoch = np.inf
+    prev_acc_epoch = np.inf
     logging_step = 0
     step = 0
     bpd_valid = 0
@@ -121,29 +121,29 @@ def train(args, train_loader, valid_loader, model, device):
                     plt.imshow(grid.permute(1, 2, 0)[:,:,0])
                     plt.axis('off')
                     plt.title("Predicted Label: {} || GT Label: {}".format(idx_to_label[pred_label],idx_to_label[label[0].item()]))
-                    plt.show()
+                    # plt.show()
                     plt.savefig(viz_dir + '/classification_train_{}.png'.format(step), dpi=300, bbox_inches='tight')
                     plt.close()
 
 
             if step % args.val_interval == 0:
                 print('Validating model ... ')
-                metric_dict, nll_valid = validate(model,
-                                     valid_loader,
-                                     metric_dict,
-                                     args.experiment_dir,
-                                     "{}".format(step),
-                                     args)
+                metric_dict, loss_valid = validate(model,
+                                                    valid_loader,
+                                                    metric_dict,
+                                                    args.experiment_dir,
+                                                    "{}".format(step),
+                                                    args)
 
-                # save checkpoint only when nll lower than previous model
-                if nll_valid < prev_nll_epoch:
+                # save checkpoint only when acc lower than previous model
+                if np.mean(metric_dict['accuracy']) < prev_acc_epoch:
                     PATH = args.experiment_dir + '/model_checkpoints/'
                     os.makedirs(PATH, exist_ok=True)
                     torch.save({'epoch': epoch,
                                 'model_state_dict': model.state_dict(),
                                 'optimizer_state_dict': optimizer.state_dict(),
-                                'loss': nll_valid.mean()}, PATH+ f"model_epoch_{epoch}_step_{step}.tar")
-                    prev_nll_epoch = nll_valid
+                                'loss': np.mean(metric_dict['accuracy']).mean()}, PATH+ f"model_epoch_{epoch}_step_{step}.tar")
+                    prev_acc_epoch = np.mean(metric_dict['accuracy'])
 
             logging_step += 1
 
