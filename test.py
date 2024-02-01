@@ -125,7 +125,7 @@ def test(args, test_loader, model, device):
         pred_probs = torch.nn.functional.softmax(pred_scores)
         pred_label = torch.argmax(pred_probs).item()
 
-        # compute gradcam
+        # compute gradcam, https://arxiv.org/pdf/1610.02391.pdf
         feats = model.features[:-1](img)
         feats.register_hook(model.gradients)
 
@@ -149,6 +149,8 @@ def test(args, test_loader, model, device):
         plt.imshow(img[0,...].permute(1,2,0).detach().cpu().numpy())
         plt.imshow(grad_cam_upsampled, alpha=0.5, interpolation='nearest')
         plt.show()
+
+        # TODO save the images
 
         grid = torchvision.utils.make_grid(img[0:9, :, :, :].cpu(), normalize=True, nrow=3)
         plt.figure()
