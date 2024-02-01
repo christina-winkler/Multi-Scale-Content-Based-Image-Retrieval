@@ -146,10 +146,9 @@ def test(args, test_loader, model, device):
         yy = np.linspace(0, h, h, endpoint=False)
         grad_cam_upsampled = f(xx,yy)
 
-        plt.imshow(grad_cam_upsampled)
+        plt.imshow(img[0,...].permute(1,2,0).detach().cpu().numpy())
+        plt.imshow(grad_cam_upsampled, alpha=0.5, interpolation='nearest')
         plt.show()
-
-        quit()
 
         grid = torchvision.utils.make_grid(img[0:9, :, :, :].cpu(), normalize=True, nrow=3)
         plt.figure()
