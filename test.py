@@ -111,7 +111,6 @@ def test(args, test_loader, model, device):
             true_labels = item[1].to(args.device)
 
             # forward loss
-            pdb.set_trace()
             scores = model.forward(img)
             probs = torch.nn.functional.softmax(scores)
 
@@ -197,8 +196,8 @@ def main(args):
         model.classifier = nn.Linear(in_features=1024, out_features=3)
 
         # load stored model
-        modelname = 'model_epoch_2_step_500'
-        modelpath = '/home/christina/Documents/classification/runs/densenet121_resisc45__2024_02_01_15_47_52/model_checkpoints/{}.tar'.format(modelname)
+        modelname = 'model_epoch_4_step_750'
+        modelpath = '/home/christina/Documents/classification/runs/densenet121_resisc45__2024_02_01_16_12_22/model_checkpoints/{}.tar'.format(modelname)
         ckpt = torch.load(modelpath)
 
         model.load_state_dict(ckpt['model_state_dict'])
