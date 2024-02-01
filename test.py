@@ -1,5 +1,36 @@
+import argparse
 import torch
+import torch.nn as nn
+from torchvision import datasets, transforms,models
+import torchvision
 from sklearn.metrics import precision_recall_fscore_support, accuracy_score
+
+# Dataset loading
+from datasets import dataloading
+
+# Utils
+# import utils
+import random
+import numpy as np
+import os
+from datetime import datetime
+
+# Models
+from models import densenet
+
+# Optimization
+from optimization import trainer
+
+from os.path import exists, join
+import matplotlib.pyplot as plt
+import pdb
+import torch.nn as nn
+import test
+import pdb
+from tensorboardX import SummaryWriter
+
+import sys
+sys.path.append("../../")
 
 def calculate_multiclass_metrics(predictions, targets, average='weighted'):
     """
@@ -24,38 +55,6 @@ def calculate_multiclass_metrics(predictions, targets, average='weighted'):
     accuracy = accuracy_score(targets_np, predictions_np)
 
     return precision, recall, accuracy
-
-import sys
-sys.path.append("../../")
-
-import argparse
-import torch
-import torch.nn as nn
-from torchvision import datasets, transforms,models
-
-# Dataset loading
-from datasets import dataloading
-
-# Utils
-# import utils
-import random
-import numpy as np
-import os
-
-# Models
-from models import densenet
-
-# Optimization
-from optimization import trainer
-
-# import evaluate
-import test
-import pdb
-from tensorboardX import SummaryWriter
-
-import sys
-sys.path.append("../../")
-
 
 def compute_f1_score(predictions, targets, average='binary'):
     # only used in case of imbalanced dataset
@@ -96,42 +95,45 @@ def calculate_multiclass_metrics(predictions, targets, average='weighted'):
 def test(args, test_loader, model, device):
 
     loss_list=[]
-    model.eval()
+
     cross_entropy_loss = nn.CrossEntropyLoss()
 
     label_to_idx = {'airplane':0, 'ship':1, 'bridge':2}
     idx_to_label = {0: 'airplane', 1:'ship', 2:'bridge'}
 
     metric_dict = {'precision': [], 'recall': [], 'accuracy': []}
+    args.exp_name = os.path.join('experiments/',
+                                  args.modeltype + '_' + args.trainset + '_' + datetime.now().strftime("_%Y_%m_%d_%H_%M_%S"))
+    os.makedirs(args.exp_name, exist_ok=True)
 
-    with torch.no_grad():
-        for batch_idx, item in enumerate(test_loader):
+    model.eval()
+    for batch_idx, item in enumerate(test_loader):
 
-            img = item[0].to(args.device)
-            true_labels = item[1].to(args.device)
+        img = item[0].to(args.device)
+        true_labels = item[1].to(args.device)
 
-            # forward loss
-            scores = model.forward(img)
-            probs = torch.nn.functional.softmax(scores)
+        # forward loss
+        scores = model.forward(img)
+        probs = torch.nn.functional.softmax(scores)
 
-            # compute CE loss
-            loss = cross_entropy_loss(probs, true_labels)
+        # compute CE loss
+        loss = cross_entropy_loss(probs, true_labels)
+        loss.backward()
 
-            # store CE loss
-            loss_list.append(loss.mean().detach().cpu().numpy())
+        # store CE loss
+        loss_list.append(loss.mean().detach().cpu().numpy())
 
-            # retrieve predicted labels
-            predicted_labels = torch.argmax(probs, 1)
+        # retrieve predicted labels
+        predicted_labels = torch.argmax(probs, 1)
 
-            # calculate metrics
-            precision, recall, accuracy = calculate_multiclass_metrics(predicted_labels, true_labels)
+        # calculate metrics
+        precision, recall, accuracy = calculate_multiclass_metrics(predicted_labels, true_labels)
 
-            metric_dict['precision'].append(precision)
-            metric_dict['recall'].append(recall)
-            metric_dict['accuracy'].append(accuracy)
+        metric_dict['precision'].append(precision)
+        metric_dict['recall'].append(recall)
+        metric_dict['accuracy'].append(accuracy)
 
-        savedir = "{}/snapshots/valid/".format(exp_name)
-
+        savedir = "{}/snapshots/".format(args.exp_name)
         os.makedirs(savedir, exist_ok=True)
 
         # visualize training prediction and predicted label and GT
@@ -145,7 +147,7 @@ def test(args, test_loader, model, device):
         plt.axis('off')
         plt.title("Predicted Label: {} || GT Label: {}".format(idx_to_label[pred_label],idx_to_label[true_labels[0].item()]))
         # plt.show()
-        plt.savefig(savedir + '/classification_validate_{}.png'.format(logstep), dpi=300, bbox_inches='tight')
+        plt.savefig(savedir + '/classification_validate_{}.png'.format(batch_idx), dpi=300, bbox_inches='tight')
         plt.close()
 
     # Print the results
@@ -205,10 +207,8 @@ def main(args):
 
         params = sum(x.numel() for x in model.parameters() if x.requires_grad)
         print('Nr of Trainable Params on {}:  '.format(args.device), params)
-
+        print("Start testing {} on {}:".format(args.modeltype, args.trainset))
         test(args, test_loader, model, device=args.device)
-
-    print("Start testing {} on {}:".format(args.modeltype, args.trainset))
 
 
 if __name__ == "__main__":
