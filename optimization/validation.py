@@ -87,7 +87,7 @@ def validate(model, val_loader, metric_dict, exp_name, logstep, args):
             # compute CE loss
             loss = cross_entropy_loss(probs, true_labels)
 
-            # Store CE loss
+            # store CE loss
             loss_list.append(loss.mean().detach().cpu().numpy())
 
             # retrieve predicted labels
@@ -99,9 +99,6 @@ def validate(model, val_loader, metric_dict, exp_name, logstep, args):
             metric_dict['precision'].append(precision)
             metric_dict['recall'].append(recall)
             metric_dict['accuracy'].append(accuracy)
-
-            if batch_idx == 20:
-                break
 
         savedir = "{}/snapshots/valid/".format(exp_name)
 

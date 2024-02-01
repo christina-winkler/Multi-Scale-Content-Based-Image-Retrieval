@@ -97,7 +97,7 @@ def train(args, train_loader, valid_loader, model, device):
             optimizer.step()
             scheduler.step()
             step = step + 1
-            
+
 # TODO: store features over training set (output before classifier layer) in dictionary
 # TODO: then cluster them (KDTree ?)
 # TODO: store results in pickle file
@@ -140,14 +140,15 @@ def train(args, train_loader, valid_loader, model, device):
                                                     args)
 
                 # save checkpoint only when acc lower than previous model
-                if np.mean(metric_dict['accuracy']) < prev_acc_epoch:
+                print(loss_valid, prev_acc_epoch)
+                if True:
                     PATH = args.experiment_dir + '/model_checkpoints/'
                     os.makedirs(PATH, exist_ok=True)
                     torch.save({'epoch': epoch,
                                 'model_state_dict': model.state_dict(),
                                 'optimizer_state_dict': optimizer.state_dict(),
                                 'loss': np.mean(metric_dict['accuracy']).mean()}, PATH+ f"model_epoch_{epoch}_step_{step}.tar")
-                    prev_acc_epoch = np.mean(metric_dict['accuracy'])
+                    prev_acc_epoch = loss_valid
 
             logging_step += 1
 

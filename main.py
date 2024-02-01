@@ -17,7 +17,7 @@ import numpy as np
 import os
 
 # Models
-# from models import srflow, srgan, srgan2, srgan2_stochastic
+from models import densenet
 
 # Optimization
 from optimization import trainer
@@ -65,7 +65,8 @@ def main(args):
     height, width = next(iter(train_loader))[0].shape[1], next(iter(train_loader))[0].shape[2]
 
     if args.modeltype == 'densenet121':
-        model = models.densenet121(weights='DenseNet121_Weights.IMAGENET1K_V1')
+        
+        model = densenet.DensNet(num_classes=3, num_channels=3)
 
         # adapt FC classification layer
         model.classifier = nn.Linear(in_features=1024, out_features=3)
