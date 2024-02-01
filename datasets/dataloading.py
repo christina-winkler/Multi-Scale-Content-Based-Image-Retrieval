@@ -41,7 +41,7 @@ def load_fair1m(args):
                                          drop_last=True)
     val_loader = data_utils.DataLoader(valid_data, args.bsz, shuffle=True,
                                        drop_last=True)
-    test_loader = data_utils.DataLoader(test_data, args.bsz, shuffle=False,
+    test_loader = data_utils.DataLoader(test_data, args.bsz, shuffle=True,
                                         drop_last=False)
 
     return train_loader, val_loader, test_loader, args

@@ -27,6 +27,7 @@ import pdb
 import torch.nn as nn
 from tensorboardX import SummaryWriter
 import torch.nn.functional as F
+from scipy.interpolate import interp2d
 
 import sys
 sys.path.append("../../")
@@ -135,10 +136,19 @@ def test(args, test_loader, model, device):
         activations = model.activations
         grad_cam = torch.sum(a_k[:,:,None,None] * activations, dim=1)
 
-        plt.imshow(grad_cam.permute(1,2,0).detach().cpu().numpy())
+        # create superposition
+        nx, ny = grad_cam[0,...].shape
+        h, w = img.shape[2], img.shape[3]
+        x = np.linspace(0, w, nx, endpoint=False)
+        y = np.linspace(0, h, ny, endpoint=False)
+        f = interp2d(x,y,grad_cam.detach().cpu().numpy())
+        xx = np.linspace(0, w, w, endpoint=False)
+        yy = np.linspace(0, h, h, endpoint=False)
+        grad_cam_upsampled = f(xx,yy)
+
+        plt.imshow(grad_cam_upsampled)
         plt.show()
 
-        # create superposition
         quit()
 
         grid = torchvision.utils.make_grid(img[0:9, :, :, :].cpu(), normalize=True, nrow=3)
