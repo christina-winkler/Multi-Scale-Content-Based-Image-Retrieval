@@ -25,8 +25,8 @@ class DensNet(nn.Module):
         self.activations = None
 
         # register hooks
-        self.features[-1].register_full_backward_hook(self.backward_hook, prepend=False)
-        self.features[-1].register_forward_hook(self.forward_hook, prepend=False)
+        self.features[-2].register_full_backward_hook(self.backward_hook, prepend=False)
+        self.features[-2].register_forward_hook(self.forward_hook, prepend=False)
 
     def forward(self, x):
         features = self.features(x)
