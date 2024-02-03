@@ -24,13 +24,13 @@ os.environ["WANDB_SILENT"] = "true"
 import sys
 sys.path.append("../../")
 
-# seeding only for debugging
-random.seed(0)
-torch.manual_seed(0)
-np.random.seed(0)
-
-torch.backends.cudnn.deterministic = True
-torch.backends.cudnn.benchmark = False
+# # seeding only for debugging
+# random.seed(0)
+# torch.manual_seed(0)
+# np.random.seed(0)
+#
+# torch.backends.cudnn.deterministic = True
+# torch.backends.cudnn.benchmark = False
 
 def train(args, train_loader, valid_loader, model, device):
 
@@ -107,10 +107,6 @@ def train(args, train_loader, valid_loader, model, device):
             optimizer.step()
             scheduler.step()
             step = step + 1
-
-# TODO: store features over training set (output before classifier layer) in dictionary
-# TODO: then cluster them (KDTree ?)
-# TODO: store results in pickle file
 
             print("[{}] Epoch: {}, Train Step: {:01d}/{}, Bsz = {}, CE Loss {:.3f}".format(
                     datetime.now().strftime("%Y-%m-%d %H:%M"),
