@@ -31,7 +31,7 @@ sys.path.append("../../")
 def feature_indexing(args, train_loader, model, device):
     """
     Indexes features using FAISS (Facebook AI Similarity Search) indexing.
-
+    https://www.pinecone.io/learn/series/faiss/composite-indexes/
     Parameters:
     - args (Namespace): Command-line arguments or configuration settings.
     - train_loader (DataLoader): DataLoader for the training dataset.
@@ -42,24 +42,28 @@ def feature_indexing(args, train_loader, model, device):
     - None: The function performs feature indexing using FAISS and does not return any value.
     """
     # adapted from: https://towardsdatascience.com/a-hands-on-introduction-to-image-retrieval-in-deep-learning-with-pytorch-651cd6dba61e
-
-    faiss_index = faiss.IndexFlatL2(len(train_loader)*args.bsz)   # build the index
+    dimension = 2048
+    n_centroids = 3
+    faiss_index = faiss.IndexFlatL2(dimension) # quantizer
+    # faiss_index = faiss.IndexIVFPQ(quantizer, dimension, n_centroids, 16, 8)   # build the index
 
     im_indices = []
 
+    # store image representations
     with torch.no_grad():
         for batch_idx, item in enumerate(train_loader):
 
             img = item[0].to(device)
             label = item[1].to(device)
-
             preds = model.features(img)
             preds = preds.view(-1)
             preds = np.array([preds.cpu().numpy()])
             faiss_index.add(preds) #add the representation to index
             im_indices.append(str(label.item()))   #store the image label to find it later on
 
-    return None
+            # test retrieval with a query
+            _, I = faiss_index.search(preds, 5)
+            print("Retrieved Image: {}".format(im_indices[I[0][0]]))
 
 
 if __name__ == "__main__":
