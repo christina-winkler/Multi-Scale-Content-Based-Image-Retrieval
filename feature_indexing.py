@@ -63,8 +63,11 @@ def feature_indexing(args, train_loader, model, device):
 
             # test retrieval with a query
             _, I = faiss_index.search(preds, 5)
-            print("Retrieved Image: {}".format(im_indices[I[0][0]]))
+            # print("Retrieved Image: {}".format(im_indices[I[0][0]]))
 
+        # serialize faiss index
+        with open('faiss_index.pickle','wb') as f:
+            pickle.dump(faiss_index, f)
 
 if __name__ == "__main__":
 
