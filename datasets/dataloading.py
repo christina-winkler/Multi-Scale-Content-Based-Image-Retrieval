@@ -37,7 +37,7 @@ def load_fair1m(args):
     valid_data = fair1m_dataset.FAIR1MData(data_path=args.datadir + '/interview_datasets/FAIR1M_partial/valid')
     test_data = fair1m_dataset.FAIR1MData(data_path=args.datadir + '/interview_datasets/FAIR1M_partial/test')
 
-    train_loader = data_utils.DataLoader(train_data, args.bsz, shuffle=True,
+    train_loader = data_utils.DataLoader(train_data, args.bsz, shuffle=True,  pin_memory=True, num_workers=8,
                                          drop_last=True)
     val_loader = data_utils.DataLoader(valid_data, args.bsz, shuffle=True,
                                        drop_last=True)

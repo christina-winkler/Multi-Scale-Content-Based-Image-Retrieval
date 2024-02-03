@@ -65,11 +65,13 @@ def main(args):
     height, width = next(iter(train_loader))[0].shape[1], next(iter(train_loader))[0].shape[2]
 
     if args.modeltype == 'densenet121':
-        
+
         model = densenet.DensNet(num_classes=3, num_channels=3)
 
         # adapt FC classification layer
-        model.classifier = nn.Linear(in_features=1024, out_features=3)
+        model.classifier = nn.Linear(in_features=32, out_features=3)
+        model.features[-2] = nn.Conv2d(512,32,3, padding=1)
+        model.features[-1] = nn.BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
 
         params = sum(x.numel() for x in model.parameters() if x.requires_grad)
         print('Nr of Trainable Params on {}:  '.format(args.device), params)

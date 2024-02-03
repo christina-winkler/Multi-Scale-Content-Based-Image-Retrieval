@@ -6,15 +6,16 @@ from matplotlib import cm
 import torch.optim as optim
 import os
 import json
+import pickle
 from skimage.transform import resize
-
+from sklearn.neighbors import KDTree
 import numpy as np
 import random
 import pdb
 import torchvision
 from tensorboardX import SummaryWriter
 from torch.optim.lr_scheduler import StepLR
-
+from sklearn.neighbors import KNeighborsClassifier
 from optimization.validation import validate
 from typing import Tuple, Callable
 
@@ -79,6 +80,15 @@ def train(args, train_loader, valid_loader, model, device):
 
             img = item[0].to(device)
             label = item[1].to(device)
+
+            # import pdb; pdb.set_trace()
+            # k-d-trees is that they are not designed for updates.
+            # subimg = img[0:20, ...]
+            # sublab = label[0:20, ...]
+            # feats = model.features(subimg)
+            # KDTree(input.detach().cpu().numpy(), leaf_size=3)
+            # input = test.view(1,-1)
+            # test = model.features(img)
 
             model.train()
             optimizer.zero_grad()
