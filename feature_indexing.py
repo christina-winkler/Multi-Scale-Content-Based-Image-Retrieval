@@ -6,17 +6,20 @@ import torch.nn as nn
 import matplotlib.pyplot as plt
 from matplotlib import cm
 
+# Dataset loading
+from datasets import dataloading
+
+import random
+import numpy as np
 import os
 import json
 import pickle
-
-
-import numpy as np
-import random
 import pdb
 import torchvision
+import argparse
 
-from typing import Tuple, Callable
+# Models
+from models import densenet
 
 import wandb
 os.environ["WANDB_SILENT"] = "true"
@@ -38,6 +41,23 @@ def feature_indexing(args, train_loader, model, device):
     Returns:
     - None: The function performs feature indexing using FAISS and does not return any value.
     """
+    # adapted from: https://towardsdatascience.com/a-hands-on-introduction-to-image-retrieval-in-deep-learning-with-pytorch-651cd6dba61e
+
+    faiss_index = faiss.IndexFlatL2(len(train_loader)*args.bsz)   # build the index
+
+    im_indices = []
+
+    with torch.no_grad():
+        for batch_idx, item in enumerate(train_loader):
+
+            img = item[0].to(device)
+            label = item[1].to(device)
+
+            preds = model.features(img)
+            preds = preds.view(-1)
+            preds = np.array([preds.cpu().numpy()])
+            faiss_index.add(preds) #add the representation to index
+            im_indices.append(str(label.item()))   #store the image label to find it later on
 
     return None
 
@@ -132,8 +152,8 @@ if __name__ == "__main__":
     model.features[-1] = nn.BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
 
     # load stored model
-    modelname = 'model_epoch_2_step_500'
-    modelpath = '/home/christina/Documents/classification/runs/densenet121_resisc45__2024_02_01_17_05_30/model_checkpoints/{}.tar'.format(modelname)
+    modelname = 'model_epoch_10_step_2000'
+    modelpath = '/home/christina/Documents/classification/runs/densenet121_resisc45__2024_02_03_17_31_54/model_checkpoints/{}.tar'.format(modelname)
     ckpt = torch.load(modelpath)
 
     model.load_state_dict(ckpt['model_state_dict'])
