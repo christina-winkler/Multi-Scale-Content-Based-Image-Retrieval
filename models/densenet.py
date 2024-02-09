@@ -40,7 +40,3 @@ class DensNet(nn.Module):
 
     def forward_hook(self, module, input, output):
         self.activations = output
-
-
-
-# TODO: add gradcam https://towardsdatascience.com/grad-cam-in-pytorch-use-of-forward-and-backward-hooks-7eba5e38d569

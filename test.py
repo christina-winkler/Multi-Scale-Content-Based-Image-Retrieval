@@ -13,6 +13,7 @@ from datasets import dataloading
 import random
 import numpy as np
 import os
+import pickle
 from datetime import datetime
 
 # Models
@@ -79,7 +80,7 @@ def get_densnet_features(model, images):
 def test(args, test_loader, model, device):
 
     loss_list=[]
-
+    failure_cases = []
     cross_entropy_loss = nn.CrossEntropyLoss()
 
     label_to_idx = {'airplane':0, 'ship':1, 'bridge':2}
@@ -89,6 +90,9 @@ def test(args, test_loader, model, device):
     args.exp_name = os.path.join('experiments/',
                                   args.modeltype + '_' + args.trainset + '_' + datetime.now().strftime("_%Y_%m_%d_%H_%M_%S"))
     os.makedirs(args.exp_name, exist_ok=True)
+
+    # failure_indices = [19, 34, 78, 91, 102, 115, 120, 154, 165, 177, 198, 199, 216, 223]
+
 
     model.eval()
     for batch_idx, item in enumerate(test_loader):
@@ -109,6 +113,11 @@ def test(args, test_loader, model, device):
 
         # retrieve predicted labels
         predicted_labels = torch.argmax(prob_scores, 1)
+
+        # track index of failure cases
+        if predicted_labels != true_labels:
+            failure_cases.append(batch_idx)
+            print(failure_cases)
 
         # calculate metrics
         precision, recall, accuracy = calculate_multiclass_metrics(predicted_labels, true_labels)
@@ -148,24 +157,21 @@ def test(args, test_loader, model, device):
 
         plt.imshow(img[0,...].permute(1,2,0).detach().cpu().numpy())
         plt.imshow(grad_cam_upsampled, alpha=0.5, interpolation='nearest')
-        plt.show()
-
-        # TODO save the images
-
-        grid = torchvision.utils.make_grid(img[0:9, :, :, :].cpu(), normalize=True, nrow=3)
-        plt.figure()
-        plt.imshow(grid.permute(1, 2, 0)[:,:,0])
         plt.axis('off')
         plt.title("Predicted Label: {} || GT Label: {}".format(idx_to_label[pred_label],idx_to_label[true_labels[0].item()]))
-        plt.savefig(savedir + '/classification_validate_{}.png'.format(batch_idx), dpi=300, bbox_inches='tight')
+        plt.savefig(savedir + '/classification_test_{}.png'.format(batch_idx), dpi=300, bbox_inches='tight')
         plt.close()
+
 
     # Print the results
     print(f"Precision: {np.mean(metric_dict['precision'])}")
     print(f"Recall: {np.mean(metric_dict['recall'])}")
     print(f"Accuracy: {np.mean(metric_dict['accuracy'])}")
 
-    return None
+    # serialize failure cases
+    with open('failure_cases.pickle','wb') as f:
+        pickle.dump(failure_cases, f)
+    print(failure_cases)
 
 def main(args):
 
@@ -197,6 +203,7 @@ def main(args):
 
     # load data
     train_loader, valid_loader, test_loader, args = dataloading.load_data(args)
+    import pdb; pdb.set_trace()
     in_channels = next(iter(test_loader))[0].shape[0]
     height, width = next(iter(train_loader))[0].shape[1], next(iter(train_loader))[0].shape[2]
 
@@ -205,13 +212,14 @@ def main(args):
         model = densenet.DensNet(num_classes=3, num_channels=3)
 
         # adapt FC classification layer
+        # model.classifier = nn.Linear(in_features=1024, out_features=3)
+        # adapt FC classification layer
         model.classifier = nn.Linear(in_features=1024, out_features=3)
 
         # load stored model
-        modelname = 'model_epoch_2_step_500'
-        modelpath = '/home/christina/Documents/classification/runs/densenet121_resisc45__2024_02_01_17_05_30/model_checkpoints/{}.tar'.format(modelname)
+        modelname = 'model_epoch_1_step_250'
+        modelpath = '/home/christina/Documents/classification/runs/densenet121_resisc45__2024_02_07_13_02_58/model_checkpoints/{}.tar'.format(modelname)
         ckpt = torch.load(modelpath)
-
         model.load_state_dict(ckpt['model_state_dict'])
         model = model.to(args.device)
 
