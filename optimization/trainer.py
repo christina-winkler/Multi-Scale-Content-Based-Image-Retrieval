@@ -126,9 +126,9 @@ def train(args, train_loader, valid_loader, model, device):
                     pred_probs = torch.nn.functional.softmax(pred_scores)
                     pred_label = torch.argmax(pred_probs).item()
 
-                    grid = torchvision.utils.make_grid(img[0:9, :, :, :].cpu(), normalize=True, nrow=3)
+                    # grid = torchvision.utils.make_grid(img[0,...].permute(1,2,0).detach().cpu().numpy(), normalize=True, nrow=3)
                     plt.figure()
-                    plt.imshow(grid.permute(1, 2, 0)[:,:,0])
+                    plt.imshow(img[0,...].permute(1,2,0).detach().cpu().numpy())
                     plt.axis('off')
                     plt.title("Predicted Label: {} || GT Label: {}".format(idx_to_label[pred_label],idx_to_label[label[0].item()]))
                     # plt.show()

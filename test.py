@@ -114,10 +114,10 @@ def test(args, test_loader, model, device):
         # retrieve predicted labels
         predicted_labels = torch.argmax(prob_scores, 1)
 
-        # track index of failure cases
-        if predicted_labels != true_labels:
-            failure_cases.append(batch_idx)
-            print(failure_cases)
+        # # track index of failure cases
+        # if predicted_labels != true_labels:
+        #     failure_cases.append(batch_idx)
+        #     print(failure_cases)
 
         # calculate metrics
         precision, recall, accuracy = calculate_multiclass_metrics(predicted_labels, true_labels)
@@ -203,7 +203,6 @@ def main(args):
 
     # load data
     train_loader, valid_loader, test_loader, args = dataloading.load_data(args)
-    import pdb; pdb.set_trace()
     in_channels = next(iter(test_loader))[0].shape[0]
     height, width = next(iter(train_loader))[0].shape[1], next(iter(train_loader))[0].shape[2]
 
@@ -266,7 +265,7 @@ if __name__ == "__main__":
                         help="Crop size when random cropping is applied.")
     parser.add_argument("--patch_size", type=int, default=500,
                         help="Training patch size.")
-    parser.add_argument("--bsz", type=int, default=16, help="batch size")
+    parser.add_argument("--bsz", type=int, default=1, help="batch size")
     parser.add_argument("--lr", type=float, default=0.0002,
                         help="learning rate")
     parser.add_argument("--filter_size", type=int, default=512//2,

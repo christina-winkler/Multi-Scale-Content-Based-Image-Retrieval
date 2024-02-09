@@ -28,7 +28,7 @@ sys.path.append("../../")
 
 
 
-def feature_indexing(args, train_loader, model, device):
+def feature_indexing(args, train_loader, test_loader, model, device):
     """
     Indexes features using FAISS (Facebook AI Similarity Search) indexing.
     https://www.pinecone.io/learn/series/faiss/composite-indexes/
@@ -49,6 +49,8 @@ def feature_indexing(args, train_loader, model, device):
 
     im_indices = []
 
+    # failure_indices = [19, 34, 78, 91, 102, 115, 120, 154, 165, 177, 198, 199, 216, 223]
+
     # store image representations
     with torch.no_grad():
         for batch_idx, item in enumerate(train_loader):
@@ -68,6 +70,18 @@ def feature_indexing(args, train_loader, model, device):
         # serialize faiss index
         with open('faiss_index.pickle','wb') as f:
             pickle.dump(faiss_index, f)
+
+        for batch_idx, item in enumerate(test_loader):
+            img = item[0].to(device)
+            label = item[1].to(device)
+            preds = model.features(img)
+            preds = preds.view(-1)
+            preds = np.array([preds.cpu().numpy()])
+
+            # retrieve index
+            _, I = faiss_index.search(preds, 5)
+            print("Retrieved Image: {}".format(im_indices[I[0][0]]), batch_idx)
+            # TODO for test image 102 retrieve corresponding trainings image in index
 
 if __name__ == "__main__":
 
@@ -169,4 +183,4 @@ if __name__ == "__main__":
     params = sum(x.numel() for x in model.parameters() if x.requires_grad)
     print('Nr of Trainable Params on {}:  '.format(args.device), params)
 
-    feature_indexing(args, train_loader, model, device=args.device)
+    feature_indexing(args, train_loader, test_loader, model, device=args.device)
